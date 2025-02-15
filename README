@@ -1,0 +1,99 @@
+# 📩 Gmail Email Fetcher & Parser
+
+## **Overview**
+
+This Python project fetches recent emails from Gmail using the Gmail API, extracts relevant details from HTML-formatted emails, and parses transaction data such as e-transfer details. 
+
+## **Main Focus**
+Interac e-Transfer
+
+## **Features**
+
+✅ Fetches latest emails from Gmail API
+✅ Extracts sender, subject, and email body
+✅ Parses HTML emails and extracts links
+✅ Filters e-transfer-related links
+✅ Extracts transaction details (amount, reference number, sender, etc.)
+✅ Modular structure for easy expansion
+
+## **Project Structure**
+
+```
+email_fetcher/
+│── auth.py              # Handles Gmail API authentication (OAuth2)
+│── fetch_emails.py      # Fetches emails from Gmail
+│── parse_emails.py      # Parses email body & extracts details
+│── config.py            # Configuration settings
+│── requirements.txt     # Required dependencies
+│── README.md            # Project documentation
+```
+
+## **Setup & Installation**
+
+### **1️⃣ Enable Gmail API & Get Credentials**
+
+1. **Go to** [Google API Console](https://console.cloud.google.com/)
+2. Enable **Gmail API** for your Google account
+3. Create OAuth credentials (OAuth Client ID)
+4. Download `credentials.json` and place it in the project root
+
+### **2️⃣ Install Dependencies**
+
+Ensure you have Python 3 installed, then run:
+
+```sh
+pip install -r requirements.txt
+```
+
+Or install manually:
+
+```sh
+pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client beautifulsoup4
+```
+
+### **3️⃣ Run the Script**
+
+```sh
+python fetch_emails.py
+```
+
+This will authenticate your Gmail account, fetch recent emails, and extract transaction details.
+
+## **How It Works**
+
+1. **Authentication (********`auth.py`********\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*)**
+   - Checks if `token.pickle` exists to reuse credentials.
+   - If not, prompts the user to log in via OAuth2.
+2. **Fetching Emails (********`fetch_emails.py`********\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*)**
+   - Connects to Gmail API and fetches the latest 10 emails.
+   - Extracts sender, subject, and email body.
+3. **Parsing Emails (********`parse_emails.py`********\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*)**
+   - Uses `BeautifulSoup` to clean HTML.
+   - Extracts links, filters for e-transfer links.
+   - Extracts transaction details (amount, reference number, etc.).
+
+## **Example Output**
+
+```
+📩 Email from: notify@payments.interac.ca
+📜 Subject: Interac e-Transfer: You've received $1,000.00
+📖 Body: JOHN SITHE your funds sent from BONNIE BASS have been automatically deposited...
+🔗 E-Transfer Links:
+   https://etransfer.example.com/view-transaction...
+---
+```
+
+## **Next Steps**
+
+- ✅ Store parsed email data in a database (PostgreSQL/MySQL)
+- ✅ Implement an API to query stored transactions
+- ✅ Add email filtering options (date range, sender, keywords)
+
+## **Contributing**
+
+Feel free to fork this project, submit issues, or suggest improvements!
+
+## **License**
+
+MIT License
+
