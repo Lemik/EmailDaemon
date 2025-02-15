@@ -1,6 +1,4 @@
 .gitignore
-__pycache__/auth.cpython-38.pyc
-__pycache__/fetch_emails.cpython-38.pyc
-__pycache__/parse_emails.cpython-38.pyc
 client_secret.json
 token.pickle
+__pycache__/*
