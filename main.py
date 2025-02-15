@@ -5,7 +5,8 @@ if __name__ == "__main__":
     emails = fetch_emails()
     for email in emails:
         parsed_data = parse_email(email)
-        print(f"\n📩 Email from: {parsed_data['Sender']}")
+        print(f"\n ID: {parsed_data['msg_id']}")
+        print(f"📩 Email from: {parsed_data['Sender']}")
         print(f"📜 Subject: {parsed_data['Subject']}")
         print("📊 Extracted Transaction Details:")
         for key, value in parsed_data['Email_details'].items():

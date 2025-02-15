@@ -33,6 +33,7 @@ def extract_email_details(body):
 
 def parse_email(email):
     """Extract subject, sender, body, and e-transfer links from email."""
+    msg_id = email["id"]
     headers = email["payload"]["headers"]
     payload = email["payload"]
 
@@ -73,6 +74,7 @@ def parse_email(email):
 
     # Return parsed email details
     return {
+        "msg_id": msg_id,
         "Sender": sender,
         "Subject": subject,
         "Email_details": email_details,
