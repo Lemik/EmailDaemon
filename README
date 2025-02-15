@@ -15,6 +15,7 @@ Interac e-Transfer
 ✅ Filters e-transfer-related links
 ✅ Extracts transaction details (amount, reference number, sender, etc.)
 ✅ Modular structure for easy expansion
+✅ Configurable settings via config.py
 
 ## **Project Structure**
 
@@ -87,7 +88,7 @@ This will authenticate your Gmail account, fetch recent emails, and extract tran
 
 - ✅ Store parsed email data in a database (PostgreSQL/MySQL)
 - ✅ Implement an API to query stored transactions
-- ✅ Add email filtering options (date range, sender, keywords)
+- ✅ Move emails to a specific folders and marked as done
 
 ## **Contributing**
 

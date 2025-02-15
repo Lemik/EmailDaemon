@@ -1,5 +1,6 @@
 from googleapiclient.discovery import build
 from auth import get_gmail_service
+from config import NUM_EMAILS_TO_FETCH
 
 def fetch_emails():
     """Fetch recent emails from Gmail and return raw email data."""
@@ -7,7 +8,7 @@ def fetch_emails():
     service = build("gmail", "v1", credentials=creds)
 
     # Fetch the latest 10 messages
-    results = service.users().messages().list(userId="me", maxResults=10).execute()
+    results = service.users().messages().list(userId="me", maxResults=NUM_EMAILS_TO_FETCH).execute()
     messages = results.get("messages", [])
 
     if not messages:
