@@ -39,12 +39,12 @@ def get_gmail_service():
     if not creds or not creds.valid:
         try:
             if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())  # Refresh token
+                creds.refresh(Request()) 
                 logging.info("🔄 Token refreshed successfully.")
             else:
-                raise google.auth.exceptions.RefreshError  # Force re-login if refresh fails
-        except google.auth.exceptions.RefreshError:
-            logging.warning("🔑 Token refresh failed. Re-authenticating via Google OAuth...")
+                raise google.auth.exceptions.RefreshError
+        except google.auth.exceptions.RefreshError as e:
+            logging.warning(f"🔑 Token refresh failed: {e}. Re-authenticating via Google OAuth...")
             creds = authenticate_new_user()
 
     return creds
