@@ -1,5 +1,5 @@
 from googleapiclient.discovery import build
-from auth import get_gmail_service
+from auth.auth import get_gmail_service
 from config import NUM_EMAILS_TO_FETCH
 
 def fetch_emails():
