@@ -18,9 +18,13 @@ SCOPES = [
 logging.basicConfig(**LOGGING_CONFIG)
 logging.getLogger("googleapiclient.discovery_cache").setLevel(logging.ERROR)
 
-# File paths
-TOKEN_FILE = "token.pickle"
-CLIENT_SECRET_FILE = "client_secret.json"
+# Get the absolute path of the current script (auth.py)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Adjust file paths to be inside the 'auth' directory
+TOKEN_FILE = os.path.join(BASE_DIR, "token.pickle")
+CLIENT_SECRET_FILE = os.path.join(BASE_DIR, "client_secret.json")
+
 
 def get_gmail_service():
     """Authenticate and return the Gmail API service."""
