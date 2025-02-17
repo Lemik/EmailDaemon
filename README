@@ -16,17 +16,29 @@ Interac e-Transfer
 ✅ Extracts transaction details (amount, reference number, sender, etc.)
 ✅ Modular structure for easy expansion
 ✅ Configurable settings via config.py
+✅ Stores parsed data** in an AWS MySQL database
+✅ Marks emails as read** and moves them to a specified folder
+✅ Runs automatically on an EC2 instance** using a cron job
 
 ## **Project Structure**
 
 ```
-email_fetcher/
-│── auth.py              # Handles Gmail API authentication (OAuth2)
-│── fetch_emails.py      # Fetches emails from Gmail
-│── parse_emails.py      # Parses email body & extracts details
-│── config.py            # Configuration settings
-│── requirements.txt     # Required dependencies
-│── README.md            # Project documentation
+📁 email-daemon/
+ ├── auth/
+ │   ├── client_secret.json  # Google API credentials
+ │   ├── auth.py  # Handles Gmail authentication
+ │
+ ├── db/
+ │   ├── mySql_db_manipulations.py  # MySQL connection & inserts
+ │
+ ├── fetch_emails.py  # Fetches emails using Gmail API
+ ├── parse_emails.py  # Extracts details from HTML email body
+ ├── emails_manipulations.py  # Marks emails as read/moves them
+ ├── config.py  # Configuration (DB, logging, API scopes)
+ ├── main.py  # Main script execution
+ ├── requirements.txt  # Required Python packages
+ ├── README.md  # Documentation
+
 ```
 
 ## **Setup & Installation**
@@ -43,22 +55,38 @@ email_fetcher/
 Ensure you have Python 3 installed, then run:
 
 ```sh
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 Or install manually:
 
 ```sh
-pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client beautifulsoup4
+python3 -m pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client beautifulsoup4
 ```
 
 ### **3️⃣ Run the Script**
 
 ```sh
-python fetch_emails.py
+python3 main.py
 ```
 
 This will authenticate your Gmail account, fetch recent emails, and extract transaction details.
+
+## **Troubleshooting**
+
+Check Running Processes
+```sh
+ps aux | grep main.py
+```
+
+Kill Running Process
+```sh
+pkill -f main.py
+```
+Database Not Updating?
+```
+tail -f email_log.out
+```
 
 ## **How It Works**
 
@@ -72,6 +100,8 @@ This will authenticate your Gmail account, fetch recent emails, and extract tran
    - Uses `BeautifulSoup` to clean HTML.
    - Extracts links, filters for e-transfer links.
    - Extracts transaction details (amount, reference number, etc.).
+4. **Send Data to AWS MYSQL (********`mySql_db_manipulations.py`********\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*)**
+   - Uses `mysql.connector` to connect.
 
 ## **Example Output**
 
@@ -84,11 +114,21 @@ This will authenticate your Gmail account, fetch recent emails, and extract tran
 ---
 ```
 
+### **🚀 Summary of Updates**
+| ✅ **Improvement** | ✅ **Details** |
+|------------------|--------------|
+| 📌 **Added EC2 Instructions** | How to run on AWS with cron jobs |
+| 📌 **Added Logging & Troubleshooting** | Debugging MySQL & script issues |
+| 📌 **Improved Structure & Readability** | Clear sections & easy-to-follow steps |
+
 ## **Next Steps**
 
-- ✅ Store parsed email data in a database (PostgreSQL/MySQL)
-- ✅ Implement an API to query stored transactions
-- ✅ Move emails to a specific folders and marked as done
+- 📌 Mark emails with issues 
+- 📌 Send API call if there is an issue or email or telegram 
+- 📌 Send API call if there is a different email or telegram 
+- 📌 Send API when work is done and is it pass or not or email or telegram 
+- 📌 Handle duplicate transactions in DB
+- 📌 Optimize performance using threading
 
 ## **Contributing**
 
