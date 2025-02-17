@@ -31,13 +31,16 @@ Interac e-Transfer
  ├── db/
  │   ├── mySql_db_manipulations.py  # MySQL connection & inserts
  │
- ├── fetch_emails.py  # Fetches emails using Gmail API
- ├── parse_emails.py  # Extracts details from HTML email body
- ├── emails_manipulations.py  # Marks emails as read/moves them
- ├── config.py  # Configuration (DB, logging, API scopes)
- ├── main.py  # Main script execution
+ ├── services/
+ ├── email_fetcher.py  # Functions to fetch emails
+ ├── email_parser.py   # Functions to parse email content
+ ├── db_service.py     # Functions to handle database interactions
+ ├── email_manager.py  # Functions to mark emails as read, move emails
+ │
+ ├── config.py         # Configuration (DB, logging, API scopes)
+ ├── main.py           # Main script execution
  ├── requirements.txt  # Required Python packages
- ├── README.md  # Documentation
+ ├── README.md         # Documentation
 
 ```
 

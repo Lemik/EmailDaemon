@@ -1,7 +1,7 @@
-from fetch_emails import fetch_emails
-from parse_emails import parse_email
+from services.fetch_emails import fetch_emails
+from services.parse_emails import parse_email
 from datetime import datetime
-from emails_manipulations import mark_email_read, move_email_to_folder
+from services.emails_manipulations import mark_email_read, move_email_to_folder
 from db.mySql_db_manipulations import insert_email_data
 from config import LOGGING_CONFIG
 import logging
