@@ -14,7 +14,7 @@ def connect_to_db():
         if connection.is_connected():
             logging.info("✅ Connected to AWS MySQL database")
             return connection
-    except Error as e:
+    except Exception as e:
         logging.error(f"❌ Error connecting to MySQL: {e}")
         return None
 
@@ -48,7 +48,7 @@ def insert_email_data(id: str,
         cursor.execute(query, data)
         connection.commit()
         logging.info(f"✅ Email transaction saved: Reference #{reference_number}")
-    except Error as e:
+    except Exception as e:
         logging.error(f"❌ Error inserting data: {e}")
     finally:
         cursor.close()
