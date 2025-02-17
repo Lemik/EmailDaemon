@@ -16,7 +16,11 @@ def extract_email_details(body):
         "reference_number": re.search(r"Reference Number:\s*([A-Za-z0-9]+)", text_content),
         "sent_from": re.search(r"Sent From:\s*(.+)", text_content),
         "amount_currency": re.search(r"Amount:\s*\$([\d,]+\.\d+)\s*\((\w{3})\)", text_content),
-    }
+        "recipient_name": re.search(r"Hi\s+(.+?),", text_content),  
+        "recipient_email": re.search(r"To:\s*(.*?)\s*<([^>]+)>", text_content),
+        "status_message": re.search(r"Funds Deposited!", text_content), 
+        "recipient_bank_name": re.search(r"deposited into your account at\s+([\w\s]+)", text_content)
+}
 
     # Process extracted values and handle None cases
     email_details = {
@@ -27,6 +31,10 @@ def extract_email_details(body):
         "Sent From": extracted_data["sent_from"].group(1) if extracted_data["sent_from"] else None,
         "Amount": extracted_data["amount_currency"].group(1) if extracted_data["amount_currency"] else None,
         "Currency": extracted_data["amount_currency"].group(2) if extracted_data["amount_currency"] else None,
+        "Recipient Name": extracted_data["recipient_name"].group(1) if extracted_data["recipient_name"] else None,
+        "Recipient Email": extracted_data["recipient_email"].group(2) if extracted_data["recipient_email"] else None,
+        "Status Message": extracted_data["status_message"].group(0) if extracted_data["status_message"] else None,
+        "Recipient Bank Name": extracted_data["recipient_bank_name"].group(1) if extracted_data["recipient_bank_name"] else None,
     }
 
     return email_details
@@ -48,7 +56,7 @@ def parse_email(email):
             if part["mimeType"] == "text/html":
                 body_data = part["body"]["data"]
                 body = base64.urlsafe_b64decode(body_data).decode("utf-8")
-                break  # Stop after finding the first HTML part
+                break  
 
     # If no HTML body was found, check for plain text
     if body is None and payload.get("body", {}).get("data"):
@@ -66,17 +74,16 @@ def parse_email(email):
     text_content = "No body found"
     if body:
         soup = BeautifulSoup(body, "html.parser")
-        text_content = soup.get_text(separator="\n", strip=True)  # Extract plain text
+        text_content = soup.get_text(separator="\n", strip=True)
         # Extract all links
         all_links = [a["href"] for a in soup.find_all("a", href=True)]
-        # Filter links that start with "https://etransfer"
         filtered_links = [link for link in all_links if "etransfer" in link]
 
-    # Return parsed email details
     return {
         "msg_id": msg_id,
         "Sender": sender,
         "Subject": subject,
         "Email_details": email_details,
-        "E-Transfer Links": filtered_links
+        "E-Transfer Links": filtered_links,
+        "text_content": text_content
     }
