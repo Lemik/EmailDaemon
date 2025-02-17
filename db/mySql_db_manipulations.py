@@ -2,8 +2,10 @@ import mysql.connector
 from mysql.connector import Error
 import logging
 from config import DB_CONFIG
+from config import LOGGING_CONFIG
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+# Configure logging from config.py
+logging.basicConfig(**LOGGING_CONFIG)
 
 def connect_to_db():
     """Establishes a connection to AWS MySQL."""
