@@ -3,12 +3,11 @@ from auth.auth import get_gmail_service
 from config import NUM_EMAILS_TO_FETCH
 
 def fetch_emails():
-    """Fetch recent emails from Gmail and return raw email data."""
     creds = get_gmail_service()
     service = build("gmail", "v1", credentials=creds)
 
     # Use Gmail's search query to fetch only unread messages
-    query = "is:unread"
+    query = "is:unread -is:starred"
 
     # Fetch the latest NUM_EMAILS_TO_FETCH messages
     results = service.users().messages().list(userId="me", maxResults=NUM_EMAILS_TO_FETCH, q=query).execute()

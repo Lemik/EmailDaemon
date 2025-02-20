@@ -7,7 +7,6 @@ from config import LOGGING_CONFIG
 logging.basicConfig(**LOGGING_CONFIG)
 
 def mark_email_read(email_id):
-    """Mark an email as read by removing the UNREAD label."""
     creds = get_gmail_service()
     service = build("gmail", "v1", credentials=creds)
     
@@ -19,7 +18,6 @@ def mark_email_read(email_id):
     logging.info(f"📩 Email {email_id} marked as read.")
 
 def mark_email_unread(email_id):
-    """Mark an email as unread by adding the UNREAD label."""
     creds = get_gmail_service()
     service = build("gmail", "v1", credentials=creds)
     
@@ -31,7 +29,6 @@ def mark_email_unread(email_id):
     logging.info(f"📩 Email {email_id} marked as unread.")
 
 def move_email_to_folder(email_id, folder_name):
-    """Move an email to a specific folder (label in Gmail)."""
     creds = get_gmail_service()
     service = build("gmail", "v1", credentials=creds)
     
@@ -60,6 +57,17 @@ def move_email_to_folder(email_id, folder_name):
         body={"addLabelIds": [label_id]}
     ).execute()
     logging.info(f"📩 Email {email_id} moved to '{folder_name}'.")
+
+def mark_email_starred(email_id):
+    creds = get_gmail_service()
+    service = build("gmail", "v1", credentials=creds)
+
+    service.users().messages().modify(
+        userId="me",
+        id=email_id,
+        body={"addLabelIds": ["STARRED"]}
+    ).execute()
+    logging.info(f"⭐ Email {email_id} marked as starred.")
 
 if __name__ == "__main__":
     test_email_id = "YOUR_EMAIL_ID_HERE"
