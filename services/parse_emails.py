@@ -1,6 +1,13 @@
 from bs4 import BeautifulSoup
 import base64
 import re
+import logging
+from config import LOGGING_CONFIG
+from email.utils import parseaddr
+from helpers import extract_html_body
+
+
+logging.basicConfig(**LOGGING_CONFIG)
 
 def extract_email_details(body):
     """Extract important details from the email body."""
@@ -44,25 +51,33 @@ def parse_email(email):
     msg_id = email["id"]
     headers = email["payload"]["headers"]
     payload = email["payload"]
+    logging.debug(f" PARSE EMAIL -->")
+    logging.debug(f"msg_id: {msg_id:}")
+    #logging.debug(f"headers: {headers:}")
+    #logging.debug(f"payload: {payload:}")
 
     # Extract Subject and Sender
     subject = next((h["value"] for h in headers if h["name"] == "Subject"), "No Subject")
     sender = next((h["value"] for h in headers if h["name"] == "From"), "Unknown Sender")
 
+    logging.debug(f"subject: {subject:}")
+    logging.debug(f"sender: {sender:}")
+
     # Extract Email Body (HTML content)
     body = None
     if "parts" in payload:
         for part in payload["parts"]:
-            if part["mimeType"] == "text/html":
-                body_data = part["body"]["data"]
-                body = base64.urlsafe_b64decode(body_data).decode("utf-8")
-                break  
+            body = extract_html_body(part)
+            if body:
+                break 
 
+    #logging.debug(f"BODY: {body}")
     # If no HTML body was found, check for plain text
     if body is None and payload.get("body", {}).get("data"):
         body_data = payload["body"]["data"]
         body = base64.urlsafe_b64decode(body_data).decode("utf-8")
 
+    
     # Parse the transaction details
     if body:
         email_details = extract_email_details(body)
@@ -79,6 +94,7 @@ def parse_email(email):
         all_links = [a["href"] for a in soup.find_all("a", href=True)]
         filtered_links = [link for link in all_links if "etransfer" in link]
 
+    logging.debug(f" <---- parse_email --")
     return {
         "msg_id": msg_id,
         "Sender": sender,
@@ -87,3 +103,52 @@ def parse_email(email):
         "E-Transfer Links": filtered_links,
         "text_content": text_content
     }
+
+def extract_header_value(headers, key):
+    """Helper function to extract a specific header's value."""
+    for header in headers:
+        if header['name'].lower() == key.lower():
+            return header['value']
+    return None
+
+def validate_email(headers):
+    """Validates an email using SPF, DKIM, DMARC, and header consistency checks."""
+    
+    # Extract relevant headers
+    from_header = extract_header_value(headers, "From")
+    reply_to_header = extract_header_value(headers, "Reply-To")
+    date = extract_header_value(headers, "date")
+    #return_path_header = extract_header_value(headers, "Return-Path")
+    authentication_results = extract_header_value(headers, "Authentication-Results")
+    
+    # Parse email addresses
+    from_name, from_email = parseaddr(from_header)
+    reply_to_name, reply_to_email = parseaddr(reply_to_header) if reply_to_header else (None, None)
+   # return_path_email = parseaddr(return_path_header)[1] if return_path_header else None
+    
+    # Check SPF, DKIM, DMARC in Authentication-Results
+    spf_pass = "spf=pass" in authentication_results if authentication_results else False
+    dkim_pass = "dkim=pass" in authentication_results if authentication_results else False
+    dmarc_pass = "dmarc=pass" in authentication_results if authentication_results else False
+    
+    # Suspicious conditions
+   # header_mismatch = from_email != return_path_email  # Possible spoofing
+    #reply_to_mismatch = reply_to_email and from_email.split('@')[-1] != reply_to_email.split('@')[-1]  # Reply-To different domain
+    
+    # Validation Results
+    results = {
+        "From Email": from_email,
+        "From Name": from_name,
+        "Reply-To Email": reply_to_email,
+       # "Return-Path Email": return_path_email,
+        "SPF Pass": spf_pass,
+        "DKIM Pass": dkim_pass,
+        "DMARC Pass": dmarc_pass,
+        "Date": date,
+    #    "Header Consistency": not header_mismatch,
+    #    "Reply-To Spoofing": reply_to_mismatch,
+        "Likely Legitimate": all([spf_pass, dkim_pass, dmarc_pass])
+    }
+
+    logging.debug(f"validate_email: {results}  \n")
+    return results
