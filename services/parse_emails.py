@@ -152,3 +152,30 @@ def validate_email(headers):
 
     logging.debug(f"validate_email: {results}  \n")
     return results
+
+def extract_email_info(headers):
+    def get_value(name):
+        for h in headers:
+            if h['name'].lower() == name.lower():
+                return h['value']
+        return None
+
+    to, to_email = parseaddr(get_value("To"))
+    from_name, from_email = parseaddr (get_value("From"))
+    reply_to, reply_to_email = parseaddr (get_value("Reply-To"))
+
+    return {
+        "to": to,
+        "to_email": to_email,
+        "from": from_name,
+        "from_email": from_email,
+        "reply_to": reply_to,
+        "reply_to_email": reply_to_email,
+        "subject": get_value("Subject"),
+        "date": get_value("Date"),
+        "x_date": get_value("X-Date"),
+        "payment_key": get_value("X-PaymentKey"),
+        "payment_id": get_value("X-Payment-Notification"),
+        "message_type": get_value("X-MessageType"),
+        "message_id": get_value("Message-ID"),
+    }

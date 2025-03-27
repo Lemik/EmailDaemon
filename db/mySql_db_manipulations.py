@@ -19,7 +19,9 @@ def connect_to_db():
         return None
 
 def insert_email_data(id: str,
-    sender_name: str, send_date: str, send_amount: float, currency: str,
+    sender_name: str, 
+    sender_email: str,
+    send_date: str, send_amount: float, currency: str,
     sender_message: str, reference_number: str, recipient_name: str,
     recipient_email: str, status_message: str, recipient_bank_name: str,
     recipient_account_ending: str, view_in_browser_link: str = None
@@ -30,15 +32,15 @@ def insert_email_data(id: str,
 
     query = """
     INSERT INTO Rental_Payments_Log (id,
-        sender_name, send_date, send_amount, currency, sender_message, reference_number,
+        sender_name,sender_email, send_date, send_amount, currency, sender_message, reference_number,
         recipient_name, recipient_email, status_message, recipient_bank_name,
         recipient_account_ending, view_in_browser_link, created_at, updated_at
     )
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     """
 
     data = (
-        id, sender_name, send_date, send_amount, currency, sender_message, reference_number,
+        id, sender_name,sender_email, send_date, send_amount, currency, sender_message, reference_number,
         recipient_name, recipient_email, status_message, recipient_bank_name,
         recipient_account_ending, view_in_browser_link
     )
@@ -48,8 +50,10 @@ def insert_email_data(id: str,
         cursor.execute(query, data)
         connection.commit()
         logging.info(f"✅ Email transaction saved: Reference #{reference_number}")
+        return {reference_number}
     except Exception as e:
         logging.error(f"❌ Error inserting data: {e}")
+        return None
     finally:
         cursor.close()
         connection.close()

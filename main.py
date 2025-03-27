@@ -1,8 +1,8 @@
 from services.fetch_emails import fetch_emails
-from services.parse_emails import parse_email, validate_email
+from services.parse_emails import parse_email, validate_email, extract_email_info
 from services.emails_manipulations import mark_email_read, move_email_to_folder, mark_email_starred
 from db.mySql_db_manipulations import insert_email_data
-from config import LOGGING_CONFIG
+from config import LOGGING_CONFIG, DEBUG
 import logging
 from helpers import convert_email_date, log_suspicious_email
 
@@ -23,6 +23,7 @@ if __name__ == "__main__":
         try:
 # Step 3.1: Validate suspicious emails
             result_of_validate_email = validate_email(email["payload"]["headers"])
+            result_of_extract_email_info = extract_email_info(email["payload"]["headers"])
             
 # Step 3.2 Ignore / Log suspicious emails
             if not result_of_validate_email["Likely Legitimate"]:
@@ -65,17 +66,21 @@ if __name__ == "__main__":
                     logging.debug(f"{key}: {value}")
                 logging.debug("--------------------  \n")
 
+                logging.debug("-- result_of_extract_email_info  -- \n")
+                for key, value in result_of_extract_email_info.items():
+                    logging.debug(f"{key}: {value}")
+                logging.debug("--------------------  \n")
 
             logging.debug("--- All Data -----")
             logging.debug(f'Sent From: {email_details.get("Sent From") or "🚨  🚨  🚨"} ')
-            logging.debug(f'Reply-To Email: {result_of_validate_email.get("Reply-To Email") or "🚨  🚨  🚨"}')
+            logging.debug(f'sender_email aka Reply-To Email: {result_of_validate_email.get("Reply-To Email") or "🚨  🚨  🚨"}')
             logging.debug(f'Send_date: {convert_email_date(email_details.get("Date") or result_of_validate_email.get("Date")) or "🚨  🚨  🚨"}')
             logging.debug(f'Send_amount: {float(email_details.get("Amount", "0").replace(",", "")) or "🚨  🚨  🚨"}')
             logging.debug(f'currency: {email_details.get("Currency") or result_of_validate_email.get("Currency") or "🚨  🚨  🚨"}')
             logging.debug(f'sender_message: {email_details.get("Message") or "🚨  🚨  🚨"}')
             logging.debug(f'reference_number: {email_details.get("Reference Number") or "🚨  🚨  🚨"}')
             logging.debug(f'recipient_name: {email_details.get("Recipient Name") or "🚨  🚨  🚨"}')
-            logging.debug(f'recipient_email: {email_details.get("Recipient Email") or "🚨  🚨  🚨"}')
+            logging.debug(f'recipient_email: {email_details.get("Recipient Email") or result_of_extract_email_info.get("to_email") or "🚨  🚨  🚨"}')
             logging.debug(f'status_message: {email_details.get("Status Message") or "🚨  🚨  🚨"}')
             logging.debug(f'recipient_bank_name: {email_details.get("Recipient Bank Name") or "🚨  🚨  🚨"}')
             logging.debug(f'recipient_account_ending: {email_details.get("Account Ending") or "🚨  🚨  🚨"}')
@@ -91,42 +96,49 @@ if __name__ == "__main__":
             logging.debug("---\n")
 
 
+            sender_name = email_details.get("Sent From") or "Unknown"
 # Step 3.6: MySQL insertion
 # Ensure default values for required fields to avoid NULL errors
             insert_success = False
-            try:
-                insert_email_data(
-                    id=test_email_id,
-                    sender_name=email_details.get("Sent From") or "Unknown", 
-                    sender_email= result_of_validate_email.get("Reply-To Email","Unknown"),
-                    send_date = convert_email_date(email_details.get("Date") or result_of_validate_email.get("Date") or "Unknown"),
-                    send_amount=float(email_details.get("Amount", "0").replace(",", "")) if email_details.get("Amount") else 0.0,
-                    currency=email_details.get("Currency", "Unknown"),
-                    sender_message=email_details.get("Message", "No message"),
-                    reference_number=email_details.get("Reference Number", "Unknown"),
-                    recipient_name=email_details.get("Recipient Name", "Unknown"),
-                    recipient_email=email_details.get("Recipient Email", "Unknown"),
-                    status_message=email_details.get("Status Message", "Unknown"),
-                    recipient_bank_name=email_details.get("Recipient Bank Name", "Unknown"),
-                    recipient_account_ending=email_details.get("Account Ending", "Unknown"),
-                    view_in_browser_link=parsed_data["E-Transfer Links"][0] if parsed_data["E-Transfer Links"] else None
-                )
-                logging.info(f"✅ Data inserted for Reference #: {email_details.get('Reference Number', 'Unknown')}")
-                logging.debug(f"---\n insert_email_data: {insert_email_data} ---\n")
-                insert_success = True
+            if not DEBUG:
+                
+                try:
+                    insert_result = insert_email_data(
+                        id = test_email_id,
+                        sender_name = sender_name,
+                        sender_email= result_of_validate_email.get("Reply-To Email","Unknown"),
+                        send_date = convert_email_date(email_details.get("Date") or result_of_validate_email.get("Date") or "Unknown"),
+                        send_amount=float(email_details.get("Amount", "0").replace(",", "")) if email_details.get("Amount") else 0.0,
+                        currency=email_details.get("Currency", "Unknown"),
+                        sender_message=email_details.get("Message", "No message"),
+                        reference_number=email_details.get("Reference Number", "Unknown"),
+                        recipient_name = email_details.get("Recipient Name", "Unknown"),
+                        recipient_email= (email_details.get("Recipient Email") or result_of_extract_email_info.get("to_email") or "Unknown"),
+                        status_message=email_details.get("Status Message", "Unknown"),
+                        recipient_bank_name=email_details.get("Recipient Bank Name", "Unknown"),
+                        recipient_account_ending=email_details.get("Account Ending", "Unknown"),
+                        view_in_browser_link=parsed_data["E-Transfer Links"][0] if parsed_data["E-Transfer Links"] else None
+                    )
+                    if (insert_result != None) :
+                        logging.info(f"✅ Data inserted for Reference #: {email_details.get('Reference Number', 'Unknown')}")
+                        logging.debug(f"---\n insert_email_data: {insert_email_data} ---\n")
+                        insert_success = True
+                    else:
+                        logging.error(f"❌ Data wasn't inserted {test_email_id}")
+                        insert_success = False
 
-            except Exception as e:
-                logging.error(f"❌ Failed to insert email data for ID {test_email_id}: {e}")
-                insert_success = False
+                except Exception as e:
+                    logging.error(f"❌ Failed to insert email data for ID {test_email_id}: {e}")
+                    insert_success = False
 
             #Only mark the email as read & move it if it was successfully inserted
-     #       if insert_success:
-    #           mark_email_read(test_email_id)
-    #           move_email_to_folder(test_email_id, sender_name)
-    #          logging.info(f"📥 Email {test_email_id} marked as read and moved.")
-    #        else:
-    #            logging.warning(f"❌ Email {test_email_id} was NOT marked as read/moved due to DB failure.")
-    #           mark_email_starred(test_email_id)  # ⭐ Mark email with a star if DB insertion fails
+            if insert_success:
+                mark_email_read(test_email_id)
+                move_email_to_folder(test_email_id, sender_name)
+                logging.info(f"📥 Email {test_email_id} marked as read and moved.")
+            else:
+                logging.warning(f"❌ Email {test_email_id} was NOT marked as read/moved due to DB failure.")
+                mark_email_starred(test_email_id)  # ⭐ Mark email with a star if DB insertion fails
 
         except Exception as e:
             logging.error(f"🚨 Unexpected error processing email {email.get('id', 'Unknown')}: {e}")

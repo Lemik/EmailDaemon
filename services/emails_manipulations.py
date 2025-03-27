@@ -28,7 +28,7 @@ def mark_email_unread(email_id):
     ).execute()
     logging.info(f"📩 Email {email_id} marked as unread.")
 
-def move_email_to_folder(email_id, folder_name):
+def move_email_to_folder(email_id: str, folder_name:str):
     creds = get_gmail_service()
     service = build("gmail", "v1", credentials=creds)
     
