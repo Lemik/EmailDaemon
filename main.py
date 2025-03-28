@@ -1,6 +1,6 @@
 from services.fetch_emails import fetch_emails
 from services.parse_emails import parse_email, validate_email, extract_email_info
-from services.emails_manipulations import mark_email_read, move_email_to_folder, mark_email_starred
+from services.emails_manipulations import mark_email_read, move_email_to_folder, mark_email_starred,remove_inbox_label
 from db.mySql_db_manipulations import insert_email_data
 from config import LOGGING_CONFIG, DEBUG
 import logging
@@ -135,6 +135,7 @@ if __name__ == "__main__":
             if insert_success:
                 mark_email_read(test_email_id)
                 move_email_to_folder(test_email_id, sender_name)
+                remove_inbox_label(test_email_id)
                 logging.info(f"📥 Email {test_email_id} marked as read and moved.")
             else:
                 logging.warning(f"❌ Email {test_email_id} was NOT marked as read/moved due to DB failure.")

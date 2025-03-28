@@ -58,6 +58,28 @@ def move_email_to_folder(email_id: str, folder_name:str):
     ).execute()
     logging.info(f"📩 Email {email_id} moved to '{folder_name}'.")
 
+def remove_inbox_label(email_id: str):
+    creds = get_gmail_service()
+    service = build("gmail", "v1", credentials=creds)
+    
+    # Get existing labels
+    labels = service.users().labels().list(userId="me").execute().get("labels", [])
+    
+    # Check if the label exists
+    label_id = None
+    for label in labels:
+        if label["name"].lower() == "inbox":
+            label_id = label["id"]
+            break
+    
+    # Remove email to the label (folder)
+    service.users().messages().modify(
+        userId="me",
+        id=email_id,
+        body={"removeLabelIds": [label_id]}
+    ).execute()
+    logging.info(f"📩 Email {email_id} removed from inbox.")
+
 def mark_email_starred(email_id):
     creds = get_gmail_service()
     service = build("gmail", "v1", credentials=creds)

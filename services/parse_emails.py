@@ -54,7 +54,7 @@ def parse_email(email):
     logging.debug(f" PARSE EMAIL -->")
     logging.debug(f"msg_id: {msg_id:}")
     #logging.debug(f"headers: {headers:}")
-    #logging.debug(f"payload: {payload:}")
+    logging.debug(f"payload: {payload:}")
 
     # Extract Subject and Sender
     subject = next((h["value"] for h in headers if h["name"] == "Subject"), "No Subject")
@@ -76,6 +76,7 @@ def parse_email(email):
     if body is None and payload.get("body", {}).get("data"):
         body_data = payload["body"]["data"]
         body = base64.urlsafe_b64decode(body_data).decode("utf-8")
+        logging.debug(f"body decode: {body}")
 
     
     # Parse the transaction details
@@ -83,6 +84,7 @@ def parse_email(email):
         email_details = extract_email_details(body)
     else:
         email_details = {}    
+        logging.debug(f"❌  no Body: {body}")
 
     # Parse HTML with BeautifulSoup
     filtered_links = []
