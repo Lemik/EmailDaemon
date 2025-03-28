@@ -100,9 +100,9 @@ if __name__ == "__main__":
 # Step 3.6: MySQL insertion
 # Ensure default values for required fields to avoid NULL errors
             insert_success = False
-            if not DEBUG:
+            #if not DEBUG:
                 
-                try:
+            try:
                     insert_result = insert_email_data(
                         id = test_email_id,
                         sender_name = sender_name,
@@ -127,9 +127,9 @@ if __name__ == "__main__":
                         logging.error(f"❌ Data wasn't inserted {test_email_id}")
                         insert_success = False
 
-                except Exception as e:
-                    logging.error(f"❌ Failed to insert email data for ID {test_email_id}: {e}")
-                    insert_success = False
+            except Exception as e:
+                        logging.error(f"❌ Failed to insert email data for ID {test_email_id}: {e}")
+                        insert_success = False
 
             #Only mark the email as read & move it if it was successfully inserted
             if insert_success:

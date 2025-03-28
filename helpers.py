@@ -13,6 +13,7 @@ def convert_email_date(date_str):
         "%a, %d %b %Y %H:%M:%S %z",          # e.g., Sat, 1 Mar 2025 23:22:06 +0000
         "%a, %b %d, %Y at %I:%M %p",         # e.g., Sat, Mar 1, 2025 at 11:03 PM
         "%B %d, %Y",                         # e.g., March 1, 2025
+        "%b %d, %Y"                          # e.g., Feb 28, 2025
         
     ]
     

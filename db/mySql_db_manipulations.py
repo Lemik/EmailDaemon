@@ -28,7 +28,8 @@ def insert_email_data(id: str,
 ):
     connection = connect_to_db()
     if not connection:
-        return
+        logging.error(f"❌ Error Connection to DB: {connection}")
+        return 
 
     query = """
     INSERT INTO Rental_Payments_Log (id,
@@ -51,9 +52,11 @@ def insert_email_data(id: str,
         connection.commit()
         logging.info(f"✅ Email transaction saved: Reference #{reference_number}")
         return {reference_number}
+    
     except Exception as e:
         logging.error(f"❌ Error inserting data: {e}")
         return None
+    
     finally:
         cursor.close()
         connection.close()
