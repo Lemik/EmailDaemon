@@ -4,7 +4,7 @@ import re
 import logging
 from config import LOGGING_CONFIG
 from email.utils import parseaddr
-from helpers import extract_html_body
+from services.helpers import extract_html_body
 from services.extract import extract_email_details
 
 logging.basicConfig(**LOGGING_CONFIG)

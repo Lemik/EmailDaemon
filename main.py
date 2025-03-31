@@ -2,10 +2,10 @@ from services.fetch_emails import fetch_emails
 from services.parse_emails import parse_email, extract_authentication_data, extract_email_headers
 from services.emails_manipulations import mark_email_read, move_email_to_folder, mark_email_starred,remove_inbox_label
 from db.mySql_db_manipulations import insert_email_data
-from debug import log_debug_data, log_dict, get_all_data
+from services.debug import log_debug_data, log_dict, get_all_data
 from config import LOGGING_CONFIG, DEBUG
 import logging
-from helpers import convert_email_date, log_suspicious_email,validate_authentication_results,get_data_ready_for_db
+from services.helpers import convert_email_date, log_suspicious_email,validate_authentication_results,get_data_ready_for_db
 
 logging.basicConfig(**LOGGING_CONFIG)
     
