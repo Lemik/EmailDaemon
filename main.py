@@ -1,10 +1,11 @@
 from services.fetch_emails import fetch_emails
-from services.parse_emails import parse_email, validate_email, extract_email_info
+from services.parse_emails import parse_email, extract_authentication_data, extract_email_headers
 from services.emails_manipulations import mark_email_read, move_email_to_folder, mark_email_starred,remove_inbox_label
 from db.mySql_db_manipulations import insert_email_data
+from debug import log_debug_data, log_dict, get_all_data
 from config import LOGGING_CONFIG, DEBUG
 import logging
-from helpers import convert_email_date, log_suspicious_email
+from helpers import convert_email_date, log_suspicious_email,validate_authentication_results,get_data_ready_for_db
 
 logging.basicConfig(**LOGGING_CONFIG)
     
@@ -22,8 +23,11 @@ if __name__ == "__main__":
     for email in emails:
         try:
 # Step 3.1: Validate suspicious emails
-            result_of_validate_email = validate_email(email["payload"]["headers"])
-            result_of_extract_email_info = extract_email_info(email["payload"]["headers"])
+            auth_data = extract_authentication_data(email["payload"]["headers"])
+            result_of_validate_email = validate_authentication_results(auth_data)
+            merge_data = {**auth_data, **result_of_validate_email}
+            logging.debug(f"auth_data:\n {merge_data}")
+            result_of_extract_email_headers = extract_email_headers(email["payload"]["headers"])
             
 # Step 3.2 Ignore / Log suspicious emails
             if not result_of_validate_email["Likely Legitimate"]:
@@ -43,50 +47,19 @@ if __name__ == "__main__":
                 continue 
             
 # Step 3.5: Debug 
-            logging.debug("--- Debug --- \n")      
-            logging.debug(f"\n ID: {test_email_id}")
-            logging.debug(f"📩 Email from: {parsed_data['Sender']}")
-            logging.debug(f"📜 Subject: {email_subject}")
-            logging.debug("📊 Extracted Transaction Details:")
-
             email_details = parsed_data["Email_details"]
             if(logging.debug):
-                logging.debug("-- parsed_data  -- \n")
-                for key, value in parsed_data.items():
-                    logging.debug(f"{key}: {value}")
-                logging.debug("--------------------  \n")
+                logging.debug("--- Debug --- \n")      
+                logging.debug(f"\n ID: {test_email_id}")
+                logging.debug(f"📩 Email from: {parsed_data['Sender']}")
+                logging.debug(f"📜 Subject: {email_subject}")
+                logging.debug("📊 Extracted Transaction Details:")
 
-                logging.debug("-- email_details  -- \n")
-                for key, value in email_details.items():
-                    logging.debug(f"{key}: {value}")
-                logging.debug("--------------------  \n")
-
-                logging.debug("-- result_of_validate_email  -- \n")
-                for key, value in result_of_validate_email.items():
-                    logging.debug(f"{key}: {value}")
-                logging.debug("--------------------  \n")
-
-                logging.debug("-- result_of_extract_email_info  -- \n")
-                for key, value in result_of_extract_email_info.items():
-                    logging.debug(f"{key}: {value}")
-                logging.debug("--------------------  \n")
-
-            logging.debug("--- All Data -----")
-            logging.debug(f'Sent From: {email_details.get("Sent From") or "🚨  🚨  🚨"} ')
-            logging.debug(f'sender_email aka Reply-To Email: {result_of_validate_email.get("Reply-To Email") or "🚨  🚨  🚨"}')
-            logging.debug(f'Send_date: {convert_email_date(email_details.get("Date") or result_of_validate_email.get("Date")) or "🚨  🚨  🚨"}')
-            logging.debug(f'Send_amount: {float(email_details.get("Amount", "0").replace(",", "")) or "🚨  🚨  🚨"}')
-            logging.debug(f'currency: {email_details.get("Currency") or result_of_validate_email.get("Currency") or "🚨  🚨  🚨"}')
-            logging.debug(f'sender_message: {email_details.get("Message") or "🚨  🚨  🚨"}')
-            logging.debug(f'reference_number: {email_details.get("Reference Number") or "🚨  🚨  🚨"}')
-            logging.debug(f'recipient_name: {email_details.get("Recipient Name") or "🚨  🚨  🚨"}')
-            logging.debug(f'recipient_email: {email_details.get("Recipient Email") or result_of_extract_email_info.get("to_email") or "🚨  🚨  🚨"}')
-            logging.debug(f'status_message: {email_details.get("Status Message") or "🚨  🚨  🚨"}')
-            logging.debug(f'recipient_bank_name: {email_details.get("Recipient Bank Name") or "🚨  🚨  🚨"}')
-            logging.debug(f'recipient_account_ending: {email_details.get("Account Ending") or "🚨  🚨  🚨"}')
-            logging.debug(f'view_in_browser_link: {parsed_data["E-Transfer Links"][0]}')
-            logging.debug("--------------------------------------------------\n")
-            
+                log_dict('parsed_data',parsed_data)
+                log_dict('email_details',email_details)
+                log_dict('result_of_validate_email',result_of_validate_email)
+                log_dict('result_of_extract_email_headers',result_of_extract_email_headers)
+               
             logging.debug("🔗 E-Transfer Links:")
             if(logging.debug):
                 if parsed_data["E-Transfer Links"]:
@@ -95,30 +68,16 @@ if __name__ == "__main__":
                     logging.debug("No e-transfer links found.")
             logging.debug("---\n")
 
-
-            sender_name = email_details.get("Sent From") or "Unknown"
 # Step 3.6: MySQL insertion
 # Ensure default values for required fields to avoid NULL errors
             insert_success = False
-            #if not DEBUG:
-                
+            
+            data_for_db = get_data_ready_for_db(test_email_id, result_of_validate_email, result_of_extract_email_headers, email_details, parsed_data)
+            log_dict("All Data", data_for_db)
+           
             try:
-                    insert_result = insert_email_data(
-                        id = test_email_id,
-                        sender_name = sender_name,
-                        sender_email= result_of_validate_email.get("Reply-To Email","Unknown"),
-                        send_date = convert_email_date(email_details.get("Date") or result_of_validate_email.get("Date") or "Unknown"),
-                        send_amount=float(email_details.get("Amount", "0").replace(",", "")) if email_details.get("Amount") else 0.0,
-                        currency=email_details.get("Currency", "Unknown"),
-                        sender_message=email_details.get("Message", "No message"),
-                        reference_number=email_details.get("Reference Number", "Unknown"),
-                        recipient_name = email_details.get("Recipient Name", "Unknown"),
-                        recipient_email= (email_details.get("Recipient Email") or result_of_extract_email_info.get("to_email") or "Unknown"),
-                        status_message=email_details.get("Status Message", "Unknown"),
-                        recipient_bank_name=email_details.get("Recipient Bank Name", "Unknown"),
-                        recipient_account_ending=email_details.get("Account Ending", "Unknown"),
-                        view_in_browser_link=parsed_data["E-Transfer Links"][0] if parsed_data["E-Transfer Links"] else None
-                    )
+                    insert_result = insert_email_data(**data_for_db)
+
                     if (insert_result != None) :
                         logging.info(f"✅ Data inserted for Reference #: {email_details.get('Reference Number', 'Unknown')}")
                         logging.debug(f"---\n insert_email_data: {insert_email_data} ---\n")
@@ -134,7 +93,7 @@ if __name__ == "__main__":
             #Only mark the email as read & move it if it was successfully inserted
             if insert_success:
                 mark_email_read(test_email_id)
-                move_email_to_folder(test_email_id, sender_name)
+                move_email_to_folder(test_email_id, data_for_db['sender_name'])
                 remove_inbox_label(test_email_id)
                 logging.info(f"📥 Email {test_email_id} marked as read and moved.")
             else:

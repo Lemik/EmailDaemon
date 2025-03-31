@@ -13,7 +13,7 @@ def convert_email_date(date_str):
         "%a, %d %b %Y %H:%M:%S %z",          # e.g., Sat, 1 Mar 2025 23:22:06 +0000
         "%a, %b %d, %Y at %I:%M %p",         # e.g., Sat, Mar 1, 2025 at 11:03 PM
         "%B %d, %Y",                         # e.g., March 1, 2025
-        "%b %d, %Y"                          # e.g., Feb 28, 2025
+        "%b %d, %Y"                          # e.g.,  Feb 28, 2025
         
     ]
     
@@ -44,3 +44,39 @@ def extract_html_body(part):
         if result:
             return result
     return None
+
+def validate_authentication_results(auth_data):
+    """Checks SPF, DKIM, and DMARC from auth results and returns legitimacy."""
+    auth_results = auth_data.get("Authentication-Results", "")
+
+    return {
+        "SPF Pass": "spf=pass" in auth_results,
+        "DKIM Pass": "dkim=pass" in auth_results,
+        "DMARC Pass": "dmarc=pass" in auth_results,
+        "Likely Legitimate": all([
+            "spf=pass" in auth_results,
+            "dkim=pass" in auth_results,
+            "dmarc=pass" in auth_results
+        ])
+    }
+
+def get_data_ready_for_db(email_id, validation, headers, details, parsed):
+    logging.debug(f"get_data_ready_for_db  ->\n")
+    data_to_insert = {
+            "id": email_id,
+            "sender_name":  details.get("Sent From") or "Unknown",
+            "sender_email": validation.get("Reply-To Email", "Unknown"),
+            "send_date": convert_email_date(details.get("Date") or validation.get("Date") or "Unknown"),
+            "send_amount": float(details.get("Amount", "0").replace(",", "")) if details.get("Amount") else 0.0,
+            "currency": details.get("Currency", "Unknown"),
+            "sender_message": details.get("Message", "No message"),
+            "reference_number": details.get("Reference Number", "Unknown"),
+            "recipient_name": details.get("Recipient Name", "Unknown"),
+            "recipient_email": details.get("Recipient Email") or headers.get("to_email") or "Unknown",
+            "status_message": details.get("Status Message", "Unknown"),
+            "recipient_bank_name": details.get("Recipient Bank Name", "Unknown"),
+            "recipient_account_ending": details.get("Account Ending", "Unknown"),
+            "view_in_browser_link": parsed["E-Transfer Links"][0] if parsed["E-Transfer Links"] else None
+        }
+    logging.debug(f"-----------\n")
+    return data_to_insert
