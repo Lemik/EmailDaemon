@@ -92,9 +92,9 @@ if __name__ == "__main__":
 
             #Only mark the email as read & move it if it was successfully inserted
             if insert_success:
-                mark_email_read(test_email_id)
-                move_email_to_folder(test_email_id, data_for_db['sender_name'])
-                remove_inbox_label(test_email_id)
+ #               mark_email_read(test_email_id)
+#                move_email_to_folder(test_email_id, data_for_db['sender_name'])
+#                remove_inbox_label(test_email_id)
                 logging.info(f"📥 Email {test_email_id} marked as read and moved.")
             else:
                 logging.warning(f"❌ Email {test_email_id} was NOT marked as read/moved due to DB failure.")

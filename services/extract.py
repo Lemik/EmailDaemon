@@ -71,8 +71,9 @@ def extract_email_details(body):#this is data from text
 
         "Status Message": extract_with_fallbacks([
             r"Funds Deposited!",
-            r"has been automatically deposited"
-        ], text_content),
+            r"has been automatically deposited",
+            r"Your funds have been automatically deposited into your account"
+        ], text_content, group=0),
 
         "Recipient Bank Name": extract_with_fallbacks([
             r"deposited into your bank account at\s+([\w\s]+)",

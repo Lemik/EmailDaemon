@@ -65,7 +65,7 @@ def get_data_ready_for_db(email_id, validation, headers, details, parsed):
     data_to_insert = {
             "id": email_id,
             "sender_name":  details.get("Sent From") or "Unknown",
-            "sender_email": validation.get("Reply-To Email", "Unknown"),
+            "sender_email": validation.get("Reply-To Email") or headers.get('reply_to_email') or None,
             "send_date": convert_email_date(details.get("Date") or validation.get("Date") or "Unknown"),
             "send_amount": float(details.get("Amount", "0").replace(",", "")) if details.get("Amount") else 0.0,
             "currency": details.get("Currency", "Unknown"),
