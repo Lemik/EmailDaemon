@@ -56,7 +56,6 @@ if __name__ == "__main__":
                         error_message=str("does not contain 'Interac e-Transfer' in the subject."),
                         raw_email=str(parsed_data)  # Optionally store the raw parsed data
                     )
-                    logging.info(f"✅ Logged email error for ID {test_email_id}")
                 except Exception as log_error:
                     logging.error(f"❌ Failed to log email error for ID {test_email_id}: {log_error}")
 
