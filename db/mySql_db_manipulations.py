@@ -60,3 +60,33 @@ def insert_email_data(id: str,
     finally:
         cursor.close()
         connection.close()
+
+
+def log_email_error(id: str, subject: str, send_from: str, send_date: str, error_message: str, raw_email: str = None):
+    """Logs email processing errors into Rental_Payments_Log_Errors table."""
+    connection = connect_to_db()
+    if not connection:
+        logging.error(f"❌ Error Connection to DB: {connection}")
+        return 
+
+    query = """
+    INSERT INTO Rental_Payments_Log_Errors (id, subject, send_from, send_date, error_message, raw_email, created_at, updated_at)
+    VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    """
+
+    data = (id, subject, send_from, send_date, error_message, raw_email)
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query, data)
+        connection.commit()
+        logging.info(f"✅ Logged email error: ID #{id}")
+        return id
+    
+    except Exception as e:
+        logging.error(f"❌ Error logging email error: {e}")
+        return None
+    
+    finally:
+        cursor.close()
+        connection.close()

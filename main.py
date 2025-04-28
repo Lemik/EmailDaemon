@@ -1,7 +1,8 @@
+from datetime import datetime
 from services.fetch_emails import fetch_emails
 from services.parse_emails import parse_email, extract_authentication_data, extract_email_headers
 from services.emails_manipulations import mark_email_read, move_email_to_folder, mark_email_starred,remove_inbox_label
-from db.mySql_db_manipulations import insert_email_data
+from db.mySql_db_manipulations import insert_email_data, log_email_error
 from services.debug import log_debug_data, log_dict, get_all_data
 from config import LOGGING_CONFIG, DEBUG
 import logging
@@ -42,6 +43,23 @@ if __name__ == "__main__":
             test_email_id = parsed_data["msg_id"]
             if "interac e-transfer" not in email_subject.lower():
                 logging.warning(f"❌ Email {test_email_id} does not contain 'Interac e-Transfer' in the subject.")
+                logging.warning(f"❌ 📜 Subject: {email_subject}")
+                logging.warning(f"❌ 📩 Email from: {parsed_data['Sender']}")
+
+                # Log the email error into the Rental_Payments_Log_Errors table
+                try:
+                    log_email_error(
+                        id=test_email_id,
+                        subject=email_subject,
+                        send_from=parsed_data['Sender'],
+                        send_date=datetime.now(),
+                        error_message=str("does not contain 'Interac e-Transfer' in the subject."),
+                        raw_email=str(parsed_data)  # Optionally store the raw parsed data
+                    )
+                    logging.info(f"✅ Logged email error for ID {test_email_id}")
+                except Exception as log_error:
+                    logging.error(f"❌ Failed to log email error for ID {test_email_id}: {log_error}")
+
                 mark_email_starred(test_email_id) 
                 mark_email_read(test_email_id)
                 continue 
@@ -71,26 +89,28 @@ if __name__ == "__main__":
 # Step 3.6: MySQL insertion
 # Ensure default values for required fields to avoid NULL errors
             insert_success = False
-            
+
             data_for_db = get_data_ready_for_db(test_email_id, result_of_validate_email, result_of_extract_email_headers, email_details, parsed_data)
             log_dict("All Data", data_for_db)
-           
-            try:
-                    insert_result = insert_email_data(**data_for_db)
 
-                    if (insert_result != None) :
-                        logging.info(f"✅ Data inserted for Reference #: {email_details.get('Reference Number', 'Unknown')}")
-                        logging.debug(f"---\n insert_email_data: {insert_email_data} ---\n")
-                        insert_success = True
-                    else:
-                        logging.error(f"❌ Data wasn't inserted {test_email_id}")
-                        insert_success = False
+            try:
+                insert_result = insert_email_data(**data_for_db)
+
+                if insert_result is not None:
+                    logging.info(f"✅ Data inserted for Reference #: {email_details.get('Reference Number', 'Unknown')}")
+                    logging.debug(f"---\n insert_email_data: {insert_email_data} ---\n")
+                    insert_success = True
+                else:
+                    logging.error(f"❌ Data wasn't inserted {test_email_id}")
+                    insert_success = False
 
             except Exception as e:
-                        logging.error(f"❌ Failed to insert email data for ID {test_email_id}: {e}")
-                        insert_success = False
+                logging.error(f"❌ Failed to insert email data for ID {test_email_id}: {e}")
+                insert_success = False
 
-            #Only mark the email as read & move it if it was successfully inserted
+ 
+
+            # Only mark the email as read & move it if it was successfully inserted
             if insert_success:
                 mark_email_read(test_email_id)
                 move_email_to_folder(test_email_id, data_for_db['sender_name'])
