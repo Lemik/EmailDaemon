@@ -1,7 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
 import logging
-from config import DB_CONFIG
+from config import PROD_DB_CONFIG
 from config import LOGGING_CONFIG
 
 # Configure logging from config.py
@@ -10,7 +10,7 @@ logging.basicConfig(**LOGGING_CONFIG)
 def connect_to_db():
     """Establishes a connection to AWS MySQL."""
     try:
-        connection = mysql.connector.connect(**DB_CONFIG)
+        connection = mysql.connector.connect(**PROD_DB_CONFIG)
         if connection.is_connected():
             logging.info("✅ Connected to AWS MySQL database")
             return connection
@@ -60,7 +60,6 @@ def insert_email_data(id: str,
     finally:
         cursor.close()
         connection.close()
-
 
 def log_email_error(id: str, subject: str, send_from: str, send_date: str, error_message: str, raw_email: str = None):
     """Logs email processing errors into Rental_Payments_Log_Errors table."""
