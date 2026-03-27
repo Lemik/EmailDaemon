@@ -1,0 +1,70 @@
+# Scheduled Gmail fetch (runs main.py).
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   GMAIL_CLIENT_SECRET_B64 — base64 of auth/client_secret.json (no newlines)
+#   GMAIL_TOKEN_PICKLE_B64  — base64 of auth/token.pickle (no newlines)
+#   DB_HOST, DB_USER, DB_PASSWORD, DB_NAME — MySQL (RDS must allow GitHub runner IPs or use a self-hosted runner in your VPC)
+# Optional: DB_PORT (default 3306)
+#
+# Prepare Gmail secrets locally (macOS/Linux):
+#   base64 < auth/client_secret.json | tr -d '\n'
+#   base64 < auth/token.pickle | tr -d '\n'
+#
+# Local runs: copy env.example to .env and set DB_* (never commit .env).
+
+name: Gmail fetch
+
+on:
+  schedule:
+    # 12:00 UTC daily — adjust as needed (cron syntax)
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gmail-fetch-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Gmail credentials from secrets
+        env:
+          GMAIL_CLIENT_SECRET_B64: ${{ secrets.GMAIL_CLIENT_SECRET_B64 }}
+          GMAIL_TOKEN_PICKLE_B64: ${{ secrets.GMAIL_TOKEN_PICKLE_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GMAIL_CLIENT_SECRET_B64:-}" ] || [ -z "${GMAIL_TOKEN_PICKLE_B64:-}" ]; then
+            echo "::error::Missing GMAIL_CLIENT_SECRET_B64 or GMAIL_TOKEN_PICKLE_B64 repository secrets."
+            exit 1
+          fi
+          mkdir -p auth
+          echo "$GMAIL_CLIENT_SECRET_B64" | base64 -d > auth/client_secret.json
+          echo "$GMAIL_TOKEN_PICKLE_B64" | base64 -d > auth/token.pickle
+
+      - name: Run main
+        env:
+          DEBUG: "false"
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+        run: python main.py

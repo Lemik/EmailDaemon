@@ -1,7 +1,10 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import time
-from ..core.config import Config
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from config import DEBUG
 from ..core.exceptions import NotificationError
 from ..core.constants import NotificationLevel, NotificationType, TableNames
 from .email_notifier import EmailNotifier
@@ -12,14 +15,13 @@ from .tracker import NotificationTracker
 
 class NotificationManager:
     def __init__(self):
-        self.config = Config()
         self.email_notifier = EmailNotifier()
         self.telegram_notifier = TelegramNotifier()
         self.preferences = NotificationPreferences()
         self.tracker = NotificationTracker()
         self.templates = NotificationTemplates()
-        self.max_retries = self.config.get('NOTIFICATION_MAX_RETRIES', 3)
-        self.retry_delay = self.config.get('NOTIFICATION_RETRY_DELAY', 300)  # 5 minutes
+        self.max_retries = 3  # Default retry count
+        self.retry_delay = 300  # 5 minutes default delay
 
     def send_notification(self, user_id: str, level: NotificationLevel,
                          template_name: str, template_data: Dict[str, Any],

@@ -1,13 +1,16 @@
 import requests
 from typing import Dict, Any
-from ..core.config import Config
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from config import DEBUG
 from ..core.exceptions import NotificationError
 
 class TelegramNotifier:
     def __init__(self):
-        self.config = Config()
-        self.bot_token = self.config.get('TELEGRAM_BOT_TOKEN')
-        self.api_url = f"https://api.telegram.org/bot{self.bot_token}"
+        # Default Telegram settings - can be overridden
+        self.bot_token = None
+        self.api_url = None
 
     def send(self, chat_id: str, message: str, data: Dict[str, Any] = None) -> None:
         """

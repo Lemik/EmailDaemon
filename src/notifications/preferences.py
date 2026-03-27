@@ -1,19 +1,22 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-from ..core.config import Config
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from config import PROD_DB_CONFIG
 from ..core.exceptions import NotificationError
 from ..core.constants import NotificationLevel, NotificationType, TableNames
 
 class NotificationPreferences:
     def __init__(self):
-        self.config = Config()
         self.connection = None
         self._connect()
 
     def _connect(self) -> None:
         """Establish database connection."""
         try:
-            self.connection = self.config.get_db_connection()
+            import mysql.connector
+            self.connection = mysql.connector.connect(**PROD_DB_CONFIG)
         except Exception as e:
             raise NotificationError(f"Failed to connect to database: {str(e)}")
 

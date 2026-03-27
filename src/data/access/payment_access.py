@@ -1,7 +1,10 @@
 import mysql.connector
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from ...core.config import Config
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+from config import PROD_DB_CONFIG
 from ...core.exceptions import DataAccessError
 from ...core.constants import TableNames
 from mysql.connector import Error

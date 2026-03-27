@@ -58,6 +58,8 @@ Interac e-Transfer
 Ensure you have Python 3 installed, then run:
 
 ```sh
+python3 -m venv .venv
+source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 

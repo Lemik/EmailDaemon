@@ -2,17 +2,20 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any
-from ..core.config import Config
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from config import DEBUG
 from ..core.exceptions import NotificationError
 
 class EmailNotifier:
     def __init__(self):
-        self.config = Config()
-        self.smtp_server = self.config.get('SMTP_SERVER')
-        self.smtp_port = self.config.get('SMTP_PORT')
-        self.smtp_username = self.config.get('SMTP_USERNAME')
-        self.smtp_password = self.config.get('SMTP_PASSWORD')
-        self.sender_email = self.config.get('SENDER_EMAIL')
+        # Default SMTP settings - can be overridden
+        self.smtp_server = "smtp.gmail.com"
+        self.smtp_port = 587
+        self.smtp_username = None
+        self.smtp_password = None
+        self.sender_email = None
 
     def send(self, to: str, subject: str, message: str, data: Dict[str, Any] = None) -> None:
         """
