@@ -44,6 +44,7 @@ class TestDB(unittest.TestCase):
         insert_email_data(
             id="12345",
             sender_name="John Doe",
+            sender_email="john@example.com",
             send_date="2025-01-01 14:49:00",
             send_amount=2600.00,
             currency="CAD",
@@ -54,7 +55,8 @@ class TestDB(unittest.TestCase):
             status_message="Completed",
             recipient_bank_name="RBC Royal Bank",
             recipient_account_ending="7686",
-            view_in_browser_link="https://etransfer.ca/verify"
+            view_in_browser_link="https://etransfer.ca/verify",
+            subject="INTERAC e-Transfer: Test payment received"
         )
         mock_cursor.execute.assert_called_once()
         mock_connection.commit.assert_called_once()
@@ -76,6 +78,7 @@ class TestDB(unittest.TestCase):
             insert_email_data(
                 id="12345",
                 sender_name="John Doe",
+                sender_email="john@example.com",
                 send_date="2025-01-01 14:49:00",
                 send_amount=2600.00,
                 currency="CAD",
@@ -86,7 +89,8 @@ class TestDB(unittest.TestCase):
                 status_message="Completed",
                 recipient_bank_name="RBC Royal Bank",
                 recipient_account_ending="7686",
-                view_in_browser_link="https://etransfer.ca/verify"
+                view_in_browser_link="https://etransfer.ca/verify",
+                subject="INTERAC e-Transfer: Test payment received"
             )
 
         print("✅ test_insert_email_data_failure passed!")

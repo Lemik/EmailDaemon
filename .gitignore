@@ -1,6 +1,9 @@
-.gitignore
 client_secret.json
 token.pickle
+auth/client_secret.json
+auth/token.pickle
 __pycache__/*
 */__pycache__/*
-config.py
+.env
+.venv
+.vscode

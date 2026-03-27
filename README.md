@@ -58,6 +58,8 @@ Interac e-Transfer
 Ensure you have Python 3 installed, then run:
 
 ```sh
+python3 -m venv .venv
+source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
@@ -154,3 +156,18 @@ Feel free to fork this project, submit issues, or suggest improvements!
 
 MIT License
 
+
+
+
+Testing 
+-First, make sure you have the required dependencies installed:
+pip install -r tests/requirements-test.txt
+
+# Run all tests
+pytest tests/unit/test_payment_access.py -v
+
+# Run with coverage report
+pytest tests/unit/test_payment_access.py --cov=src.data.access.payment_access -v
+
+# Run a specific test
+pytest tests/unit/test_payment_access.py::test_get_tenant_agreements_empty -v

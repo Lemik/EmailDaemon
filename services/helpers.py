@@ -8,12 +8,42 @@ def convert_email_date(date_str):
     """Convert email date format to MySQL-compatible DATETIME format."""
     logging.debug(f"HELPERS - > date_str: {date_str}")
     
+    # Preprocess common date string variations
+    date_str = str(date_str).strip()
+    
+    # Handle common month abbreviation variations
+    month_replacements = {
+        "Sept": "Sep",      # September: 4-letter -> 3-letter
+        "June": "Jun",      # June: full -> abbreviated
+        "July": "Jul",      # July: full -> abbreviated
+        "August": "Aug",    # August: full -> abbreviated
+        "Jan.": "Jan",      # Remove periods from abbreviations
+        "Feb.": "Feb",
+        "Mar.": "Mar", 
+        "Apr.": "Apr",
+        "May.": "May",
+        "Jun.": "Jun",
+        "Jul.": "Jul",
+        "Aug.": "Aug",
+        "Sep.": "Sep",
+        "Sept.": "Sep",     # September with period
+        "Oct.": "Oct",
+        "Nov.": "Nov", 
+        "Dec.": "Dec",
+    }
+    
+    # Handle case variations (convert to title case for consistency)
+    date_str = date_str.title()
+    
+    for old_month, new_month in month_replacements.items():
+        date_str = date_str.replace(old_month, new_month)
+    
     # List of possible formats
     formats = [
         "%a, %d %b %Y %H:%M:%S %z",          # e.g., Sat, 1 Mar 2025 23:22:06 +0000
         "%a, %b %d, %Y at %I:%M %p",         # e.g., Sat, Mar 1, 2025 at 11:03 PM
         "%B %d, %Y",                         # e.g., March 1, 2025
-        "%b %d, %Y",                         # e.g.,  Feb 28, 2025
+        "%b %d, %Y",                         # e.g., Feb 28, 2025 or Sep 29, 2025
         "YYYY-MM-DD HH:MM:SS.ssssss",        # e.g., 2025-03-01 23:22:06.123456
         
     ]
@@ -77,7 +107,8 @@ def get_data_ready_for_db(email_id, validation, headers, details, parsed):
             "status_message": details.get("Status Message", "Unknown"),
             "recipient_bank_name": details.get("Recipient Bank Name", "Unknown"),
             "recipient_account_ending": details.get("Account Ending", "Unknown"),
-            "view_in_browser_link": parsed["E-Transfer Links"][0] if parsed["E-Transfer Links"] else None
+            "view_in_browser_link": parsed["E-Transfer Links"][0] if parsed["E-Transfer Links"] else None,
+            "subject": parsed.get("Subject", "Unknown Subject")
         }
     logging.debug(f"-----------\n")
     return data_to_insert
