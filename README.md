@@ -171,3 +171,18 @@ pytest tests/unit/test_payment_access.py --cov=src.data.access.payment_access -v
 
 # Run a specific test
 pytest tests/unit/test_payment_access.py::test_get_tenant_agreements_empty -v
+
+
+
+
+
+# Git hub setup
+run app localy 
+then update this secrets 
+GMAIL_CLIENT_SECRET_B64: 
+with info based on this terminal run:
+ 	base64 < auth/client_secret.json | tr -d '\n'
+
+GMAIL_TOKEN_PICKLE_B64	
+   base64 < auth/token.pickle | tr -d '\n'
+
