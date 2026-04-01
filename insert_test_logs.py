@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to insert test job log entries into Rental_Payments_Log_stats table.
+Script to insert test job log entries into rental_payments_log_stats table.
 Creates 10 sample records with realistic data for testing monitoring functionality.
 """
 
@@ -149,7 +149,7 @@ def insert_test_entries():
     test_entries = create_test_log_entries()
     
     insert_query = """
-    INSERT INTO Rental_Payments_Log_stats (
+    INSERT INTO rental_payments_log_stats (
         job_start_time, job_end_time, duration_seconds, status, emails_fetched, 
         emails_processed, successful_transactions, failed_transactions, 
         errors_encountered, error_details, python_version, script_version, environment
@@ -202,7 +202,7 @@ def insert_test_entries():
         print(f"✅ Successfully inserted {len(test_entries)} test log entries!")
         
         # Verify insertion
-        cursor.execute("SELECT COUNT(*) FROM Rental_Payments_Log_stats WHERE environment = 'test'")
+        cursor.execute("SELECT COUNT(*) FROM rental_payments_log_stats WHERE environment = 'test'")
         count = cursor.fetchone()[0]
         print(f"📊 Total test records in database: {count}")
         
@@ -229,7 +229,7 @@ def clear_test_entries():
         cursor = connection.cursor()
         
         # Check if there are test entries
-        cursor.execute("SELECT COUNT(*) FROM Rental_Payments_Log_stats WHERE environment = 'test'")
+        cursor.execute("SELECT COUNT(*) FROM rental_payments_log_stats WHERE environment = 'test'")
         count = cursor.fetchone()[0]
         
         if count == 0:
@@ -237,7 +237,7 @@ def clear_test_entries():
             return True
             
         # Delete test entries
-        cursor.execute("DELETE FROM Rental_Payments_Log_stats WHERE environment = 'test'")
+        cursor.execute("DELETE FROM rental_payments_log_stats WHERE environment = 'test'")
         connection.commit()
         
         print(f"🗑️  Cleared {count} existing test entries")
@@ -270,7 +270,7 @@ def show_test_data():
         SELECT id, job_start_time, job_end_time, duration_seconds, status,
                emails_fetched, emails_processed, successful_transactions, 
                failed_transactions, errors_encountered
-        FROM Rental_Payments_Log_stats 
+        FROM rental_payments_log_stats 
         WHERE environment = 'test'
         ORDER BY job_start_time DESC
         """

@@ -2,7 +2,7 @@ import re
 from typing import Dict, Any, Optional
 from datetime import datetime
 from ..core.exceptions import EmailProcessingError
-from ..core.constants import TableNames
+from ..core.constants import PaymentMethodCode, PaymentRecordStatus
 
 class EmailParser:
     def __init__(self):
@@ -25,16 +25,15 @@ class EmailParser:
         """
         try:
             payment_info = {
-                'ref_tenantID': None,
-                'ref_propertyID': None,
-                'ref_landlordID': None,
-                'ref_AgreementId': None,
+                'tenant_id': None,
+                'property_id': None,
+                'landlord_id': None,
+                'agreement_id': None,
                 'amount': self._extract_amount(email_data['body']),
                 'payment_date': self._extract_date(email_data['date']),
-                'payment_method': 'e-transfer',
+                'payment_method': PaymentMethodCode.E_TRANSFER,
                 'confirmation_number': self._extract_confirmation(email_data['body']),
-                'status': 'pending',
-                'note': email_data['subject']
+                'status': PaymentRecordStatus.PENDING,
             }
             
             # Validate required fields

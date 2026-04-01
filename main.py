@@ -46,7 +46,7 @@ if __name__ == "__main__":
                 logging.warning(f"❌ 📜 Subject: {email_subject}")
                 logging.warning(f"❌ 📩 Email from: {parsed_data['Sender']}")
 
-                # Log the email error into the Rental_Payments_Log_Errors table
+                # Log the email error into the rental_payments_log_errors table
                 try:
                     log_email_error(
                         id=test_email_id,

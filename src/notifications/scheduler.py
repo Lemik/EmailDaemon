@@ -1,8 +1,8 @@
+import os
 import schedule
 import time
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
-from ..core.config import Config
 from ..core.exceptions import NotificationError
 from ..core.constants import NotificationLevel
 from .notification_manager import NotificationManager
@@ -11,11 +11,10 @@ from ..data.access.agreement_access import AgreementAccess
 
 class NotificationScheduler:
     def __init__(self):
-        self.config = Config()
         self.notification_manager = NotificationManager()
         self.payment_access = PaymentAccess()
         self.agreement_access = AgreementAccess()
-        self.check_interval = self.config.get('NOTIFICATION_CHECK_INTERVAL', 300)  # 5 minutes
+        self.check_interval = int(os.environ.get("NOTIFICATION_CHECK_INTERVAL", "300"))
 
     def start(self):
         """Start the notification scheduler."""
@@ -47,7 +46,7 @@ class NotificationScheduler:
             for agreement in agreements:
                 # Send due date reminder
                 self.notification_manager.send_notification(
-                    user_id=agreement['ref_tenantID'],
+                    user_id=str(agreement['tenant_id']),
                     level=NotificationLevel.DUE_DATE_REMINDER,
                     template_name='due_date_reminder',
                     template_data={
@@ -71,7 +70,7 @@ class NotificationScheduler:
             for agreement in agreements:
                 # Check if payment was received
                 payments = self.payment_access.get_payments_for_agreement(
-                    agreement['id_Tenancy_Agreement'],
+                    agreement['id_tenancy_agreement'],
                     yesterday,
                     yesterday
                 )
@@ -79,7 +78,7 @@ class NotificationScheduler:
                 if not payments:
                     # No payment received - send missing payment notification
                     self.notification_manager.send_notification(
-                        user_id=agreement['ref_tenantID'],
+                        user_id=str(agreement['tenant_id']),
                         level=NotificationLevel.MISSING_PAYMENT,
                         template_name='missing_payment',
                         template_data={
@@ -95,7 +94,7 @@ class NotificationScheduler:
                     days_late = (datetime.now() - yesterday).days
                     
                     self.notification_manager.send_notification(
-                        user_id=agreement['ref_tenantID'],
+                        user_id=str(agreement['tenant_id']),
                         level=NotificationLevel.LATE_PAYMENT,
                         template_name='late_payment',
                         template_data={
@@ -104,7 +103,7 @@ class NotificationScheduler:
                             'due_date': yesterday,
                             'days_late': days_late
                         },
-                        payment_id=payment['id_Payment_History']
+                        payment_id=str(payment['id_payment_history'])
                     )
         except Exception as e:
             raise NotificationError(f"Failed to check late payments: {str(e)}")

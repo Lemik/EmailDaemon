@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to create the Rental_Payments_Log_stats table in the database.
+Script to create the rental_payments_log_stats table in the database.
 Run this once to set up job tracking.
 """
 
@@ -25,7 +25,7 @@ def create_job_stats_table():
         return False
 
     create_table_sql = """
-    CREATE TABLE IF NOT EXISTS Rental_Payments_Log_stats (
+    CREATE TABLE IF NOT EXISTS rental_payments_log_stats (
         id INT AUTO_INCREMENT PRIMARY KEY,
         job_start_time DATETIME NOT NULL,
         job_end_time DATETIME,
@@ -55,14 +55,14 @@ def create_job_stats_table():
         connection.commit()
         
         # Check if table was created successfully
-        cursor.execute("SHOW TABLES LIKE 'Rental_Payments_Log_stats'")
+        cursor.execute("SHOW TABLES LIKE 'rental_payments_log_stats'")
         result = cursor.fetchone()
         
         if result:
-            logging.info("✅ Successfully created Rental_Payments_Log_stats table")
+            logging.info("✅ Successfully created rental_payments_log_stats table")
             
             # Show table structure
-            cursor.execute("DESCRIBE Rental_Payments_Log_stats")
+            cursor.execute("DESCRIBE rental_payments_log_stats")
             columns = cursor.fetchall()
             
             print("\n📊 Table Structure:")
@@ -95,7 +95,7 @@ def check_table_exists():
 
     try:
         cursor = connection.cursor()
-        cursor.execute("SHOW TABLES LIKE 'Rental_Payments_Log_stats'")
+        cursor.execute("SHOW TABLES LIKE 'rental_payments_log_stats'")
         result = cursor.fetchone()
         return bool(result)
         
@@ -115,7 +115,7 @@ def main():
     
     # Check if table already exists
     if check_table_exists():
-        print("✅ Rental_Payments_Log_stats table already exists")
+        print("✅ rental_payments_log_stats table already exists")
         
         # Show recent records if any
         from db.mySql_db_manipulations import get_job_history
@@ -134,7 +134,7 @@ def main():
         return True
     
     # Create the table
-    print("🔨 Creating Rental_Payments_Log_stats table...")
+    print("🔨 Creating rental_payments_log_stats table...")
     
     success = create_job_stats_table()
     

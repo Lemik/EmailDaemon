@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from src.data.access.payment_validator import PaymentDataValidator
 from src.core.exceptions import ValidationError
+from src.core.constants import PaymentMethodCode, PaymentRecordStatus
 
 @pytest.fixture
 def validator():
@@ -13,31 +14,30 @@ def validator():
 def valid_payment_data():
     """Create valid payment data for testing"""
     return {
-        'ref_tenantID': 'TENANT_001',
-        'ref_propertyID': 'PROPERTY_001',
-        'ref_landlordID': 'LANDLORD_001',
+        'tenant_id': 'TENANT_001',
+        'property_id': 'PROPERTY_001',
+        'landlord_id': 'LANDLORD_001',
         'amount': 1000.00,
         'payment_date': datetime.now(),
-        'payment_method': 'e-transfer',
+        'payment_method': PaymentMethodCode.E_TRANSFER,
         'confirmation_number': 'TEST123',
-        'status': 'pending',
-        'note': 'Test payment',
-        'ref_AgreementId': 'AGREEMENT_001'
+        'status': PaymentRecordStatus.PENDING,
+        'agreement_id': 'AGREEMENT_001'
     }
 
 @pytest.fixture
 def valid_agreement_data():
     """Create valid agreement data for testing"""
     return {
-        'ref_tenantID': 'TENANT_001',
-        'ref_propertyID': 'PROPERTY_001',
-        'ref_landlordID': 'LANDLORD_001',
+        'tenant_id': 'TENANT_001',
+        'property_id': 'PROPERTY_001',
+        'landlord_id': 'LANDLORD_001',
         'start_date': datetime.now(),
         'end_date': datetime.now() + timedelta(days=365),
         'amount': 1000.00,
-        'paymentDay': 1,
-        'paymentMethod': 'e-transfer',
-        'monthToMonth': True
+        'payment_day': 1,
+        'payment_method': PaymentMethodCode.E_TRANSFER,
+        'month_to_month': True
     }
 
 def test_validate_payment_data_valid(validator, valid_payment_data):
@@ -63,14 +63,14 @@ def test_validate_payment_data_invalid_status(validator, valid_payment_data):
     valid_payment_data['status'] = 'invalid_status'
     with pytest.raises(ValidationError) as exc:
         validator.validate_payment_data(valid_payment_data)
-    assert "Invalid payment status" in str(exc.value)
+    assert "Field status must be of type int" in str(exc.value)
 
 def test_validate_payment_data_invalid_method(validator, valid_payment_data):
     """Test validation of payment data with invalid payment method"""
-    valid_payment_data['payment_method'] = 'invalid_method'
+    valid_payment_data['payment_method'] = 99
     with pytest.raises(ValidationError) as exc:
         validator.validate_payment_data(valid_payment_data)
-    assert "Invalid payment method" in str(exc.value)
+    assert "Invalid payment_method" in str(exc.value)
 
 def test_validate_agreement_data_valid(validator, valid_agreement_data):
     """Test validation of valid agreement data"""
@@ -92,7 +92,7 @@ def test_validate_agreement_data_invalid_dates(validator, valid_agreement_data):
 
 def test_validate_agreement_data_invalid_payment_day(validator, valid_agreement_data):
     """Test validation of agreement data with invalid payment day"""
-    valid_agreement_data['paymentDay'] = 32
+    valid_agreement_data['payment_day'] = 32
     with pytest.raises(ValidationError) as exc:
         validator.validate_agreement_data(valid_agreement_data)
     assert "Payment day must be between 1 and 31" in str(exc.value)
@@ -100,8 +100,7 @@ def test_validate_agreement_data_invalid_payment_day(validator, valid_agreement_
 def test_validate_payment_update_valid(validator):
     """Test validation of valid payment update data"""
     update_data = {
-        'status': 'completed',
-        'note': 'Payment verified'
+        'status': PaymentRecordStatus.CLEARED,
     }
     assert validator.validate_payment_update('PAYMENT_001', update_data) is True
 
@@ -109,11 +108,10 @@ def test_validate_payment_update_invalid_status(validator):
     """Test validation of payment update with invalid status"""
     update_data = {
         'status': 'invalid_status',
-        'note': 'Payment verified'
     }
     with pytest.raises(ValidationError) as exc:
         validator.validate_payment_update('PAYMENT_001', update_data)
-    assert "Invalid payment status" in str(exc.value)
+    assert "status must be an integer" in str(exc.value)
 
 def test_validate_payment_update_empty_data(validator):
     """Test validation of payment update with empty data"""
@@ -123,7 +121,7 @@ def test_validate_payment_update_empty_data(validator):
 
 def test_validate_payment_update_missing_id(validator):
     """Test validation of payment update with missing ID"""
-    update_data = {'status': 'completed'}
+    update_data = {'status': PaymentRecordStatus.CLEARED}
     with pytest.raises(ValidationError) as exc:
         validator.validate_payment_update(None, update_data)
-    assert "Payment ID is required" in str(exc.value) 
+    assert "Payment ID is required" in str(exc.value)
