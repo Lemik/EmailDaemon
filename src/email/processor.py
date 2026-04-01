@@ -36,7 +36,7 @@ class EmailProcessor:
                     if payment_info:
                         # Store in database
                         payment_id = self.payment_access.store_payment(payment_info)
-                        payment_info['id_Payment_History'] = payment_id
+                        payment_info['id_payment_history'] = payment_id
                         processed_payments.append(payment_info)
             
             return processed_payments

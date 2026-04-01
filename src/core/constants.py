@@ -21,12 +21,31 @@ class NotificationType:
     TELEGRAM = 'telegram'
     BOTH = 'both'
 
-# Database table names
+# Database table names (MySQL production uses lowercase snake_case)
 class TableNames:
-    RENTAL_PAYMENT_HISTORY = 'Rental_Payment_History'
-    RENTAL_PAYMENT_ANALYSIS = 'Rental_Payment_Analysis'
-    NOTIFICATION_PREFERENCES = 'Notification_Preferences'
-    TENANTS = 'Tenants'
-    PROPERTIES = 'Properties'
-    LANDLORDS = 'Landlords'
-    RENTAL_AGREEMENTS = 'Rental_Agreements' 
+    RENTAL_PAYMENT_HISTORY = 'rental_payment_history'
+    RENTAL_PAYMENT_ANALYSIS = 'rental_payment_analysis'
+    NOTIFICATION_PREFERENCES = 'notification_preferences'
+    PROPERTIES = 'properties'
+    PROPERTY_TENANTS = 'property_tenants'
+    USERS = 'users'
+    RENTAL_AGREEMENTS = 'tenancy_agreements'
+    RENTAL_PAYMENTS_LOG = 'rental_payments_log'
+    RENTAL_PAYMENTS_LOG_ERRORS = 'rental_payments_log_errors'
+    RENTAL_PAYMENTS_LOG_STATS = 'rental_payments_log_stats'
+    RENTAL_PAYMENT_NOTIFICATIONS = 'rental_payment_notifications'
+
+
+# Codes stored in rental_payment_history.status / payment_method (int columns in DB)
+class PaymentRecordStatus:
+    PENDING = 0
+    RECEIVED = 100
+    CLEARED = 200
+    DISCREPANCY = 400
+    FAILED = 500
+
+
+class PaymentMethodCode:
+    UNKNOWN = 0
+    E_TRANSFER = 1
+    OTHER = 2

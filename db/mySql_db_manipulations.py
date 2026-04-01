@@ -34,7 +34,7 @@ def insert_email_data(id: str,
         return 
 
     query = """
-    INSERT INTO Rental_Payments_Log (id,
+    INSERT INTO rental_payments_log (id,
         sender_name,sender_email, send_date, send_amount, currency, sender_message, reference_number,
         recipient_name, recipient_email, status_message, recipient_bank_name,
         recipient_account_ending, view_in_browser_link, created_at, updated_at
@@ -78,14 +78,14 @@ def insert_email_data(id: str,
         connection.close()
 
 def log_email_error(id: str, subject: str, send_from: str, send_date: str, error_message: str, raw_email: str = None):
-    """Logs email processing errors into Rental_Payments_Log_Errors table."""
+    """Logs email processing errors into rental_payments_log_errors table."""
     connection = connect_to_db()
     if not connection:
         logging.error(f"❌ Error Connection to DB: {connection}")
         return 
 
     query = """
-    INSERT INTO Rental_Payments_Log_Errors (id, subject, send_from, send_date, error_message, raw_email, created_at, updated_at)
+    INSERT INTO rental_payments_log_errors (id, subject, send_from, send_date, error_message, raw_email, created_at, updated_at)
     VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     """
 
@@ -115,7 +115,7 @@ def start_job_execution():
         return None
 
     query = """
-    INSERT INTO Rental_Payments_Log_stats (
+    INSERT INTO rental_payments_log_stats (
         job_start_time, status, python_version, script_version, environment
     ) VALUES (%s, %s, %s, %s, %s)
     """
@@ -160,7 +160,7 @@ def update_job_execution(job_id, status, emails_fetched=0, emails_processed=0,
         return False
 
     query = """
-    UPDATE Rental_Payments_Log_stats 
+    UPDATE rental_payments_log_stats 
     SET status = %s, emails_fetched = %s, emails_processed = %s, 
         successful_transactions = %s, failed_transactions = %s, 
         errors_encountered = %s, error_details = %s, updated_at = CURRENT_TIMESTAMP
@@ -208,7 +208,7 @@ def complete_job_execution(job_id, status, emails_fetched=0, emails_processed=0,
         duration_seconds = int(duration.total_seconds())
 
     query = """
-    UPDATE Rental_Payments_Log_stats 
+    UPDATE rental_payments_log_stats
     SET job_end_time = %s, duration_seconds = %s, status = %s, 
         emails_fetched = %s, emails_processed = %s, successful_transactions = %s, 
         failed_transactions = %s, errors_encountered = %s, error_details = %s,
@@ -249,7 +249,7 @@ def get_job_history(limit=10, days=None):
     SELECT id, job_start_time, job_end_time, duration_seconds, status,
            emails_fetched, emails_processed, successful_transactions, 
            failed_transactions, errors_encountered, error_details
-    FROM Rental_Payments_Log_stats 
+    FROM rental_payments_log_stats 
     """
     
     if days:

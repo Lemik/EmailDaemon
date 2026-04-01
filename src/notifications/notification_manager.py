@@ -128,14 +128,15 @@ class NotificationManager:
             failed_notifications = self.tracker.get_failed_notifications(self.max_retries)
             
             for notification in failed_notifications:
+                nid = notification.get('id') or notification.get('id_Notification')
                 try:
                     # Get user preferences
-                    preferences = self.preferences.get_user_preferences(notification['ref_userID'])
+                    uid = notification.get('user_id') or notification.get('ref_userID')
+                    preferences = self.preferences.get_user_preferences(str(uid))
                     if not preferences:
                         continue
 
-                    # Increment retry count
-                    self.tracker.increment_retry_count(notification['id_Notification'])
+                    self.tracker.increment_retry_count(nid)
 
                     # Retry sending
                     if preferences['notification_type'] in [NotificationType.EMAIL, NotificationType.BOTH]:
@@ -152,14 +153,12 @@ class NotificationManager:
                         )
 
                     # Update status to sent
-                    self.tracker.update_notification_status(
-                        notification['id_Notification'], 'sent'
-                    )
+                    self.tracker.update_notification_status(nid, 'sent')
 
                 except Exception as e:
                     # Update status to failed
                     self.tracker.update_notification_status(
-                        notification['id_Notification'],
+                        nid,
                         'failed',
                         f"Retry failed: {str(e)}"
                     )
@@ -172,6 +171,7 @@ class NotificationManager:
 
     def schedule_monthly_summaries(self) -> None:
         """Schedule monthly summary notifications for all users."""
+        cursor = None
         try:
             # Get current month and year
             now = datetime.now()
@@ -179,11 +179,11 @@ class NotificationManager:
             year = now.year
 
             # Get all users with notification preferences
-            cursor = self.connection.cursor(dictionary=True)
+            cursor = self.preferences.connection.cursor(dictionary=True)
             query = f"""
-                SELECT DISTINCT np.ref_userID, np.notification_levels
+                SELECT DISTINCT np.user_id, np.notification_levels
                 FROM {TableNames.NOTIFICATION_PREFERENCES} np
-                WHERE np.ddate IS NULL
+                WHERE np.deleted_at IS NULL
             """
             cursor.execute(query)
             users = cursor.fetchall()
@@ -196,7 +196,7 @@ class NotificationManager:
                 ):
                     # Get user's payments for the month
                     payments = self._get_user_monthly_payments(
-                        user['ref_userID'],
+                        user['user_id'],
                         month,
                         year
                     )
@@ -204,7 +204,7 @@ class NotificationManager:
                     if payments:
                         # Send monthly summary
                         self.send_notification(
-                            user_id=user['ref_userID'],
+                            user_id=str(user['user_id']),
                             level=NotificationLevel.MONTHLY_SUMMARY,
                             template_name='monthly_summary',
                             template_data={
@@ -223,20 +223,21 @@ class NotificationManager:
 
     def _get_user_monthly_payments(self, user_id: str, month: int, year: int) -> List[Dict[str, Any]]:
         """Get user's payments for a specific month."""
+        cursor = None
         try:
-            cursor = self.connection.cursor(dictionary=True)
+            cursor = self.preferences.connection.cursor(dictionary=True)
             query = f"""
-                SELECT 
+                SELECT
                     rph.*,
-                    pt.Fname as tenant_name,
-                    ta.amount as expected_amount
+                    CONCAT(pt.first_name, ' ', pt.last_name) AS tenant_name,
+                    ta.amount AS expected_amount
                 FROM {TableNames.RENTAL_PAYMENT_HISTORY} rph
-                JOIN Property_tenant pt ON rph.ref_tenantID = pt.id_Property_tenant
-                LEFT JOIN Tenancy_Agreement ta ON rph.ref_AgreementId = ta.id_Tenancy_Agreement
-                WHERE rph.ref_tenantID = %s
+                JOIN {TableNames.PROPERTY_TENANTS} pt ON rph.tenant_id = pt.id_property_tenant
+                LEFT JOIN {TableNames.RENTAL_AGREEMENTS} ta ON rph.agreement_id = ta.id_tenancy_agreement
+                WHERE rph.tenant_id = %s
                 AND MONTH(rph.payment_date) = %s
                 AND YEAR(rph.payment_date) = %s
-                AND rph.ddate IS NULL
+                AND rph.deleted_at IS NULL
                 ORDER BY rph.payment_date
             """
             cursor.execute(query, (user_id, month, year))

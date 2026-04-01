@@ -24,7 +24,10 @@ class PaymentAnalyzer:
         """
         try:
             # Get agreement details
-            agreement = self.agreement_access.get_agreement_by_id(payment_data['ref_AgreementId'])
+            agreement_id = payment_data.get('agreement_id')
+            if not agreement_id:
+                raise AnalysisError("Agreement ID required")
+            agreement = self.agreement_access.get_agreement_by_id(str(agreement_id))
             if not agreement:
                 raise AnalysisError("Agreement not found")
 
@@ -38,9 +41,11 @@ class PaymentAnalyzer:
             else:
                 status = PaymentStatus.LATE
 
+            pid = payment_data.get('id_payment_history')
+            tid = payment_data.get('tenant_id')
             return {
-                'payment_id': payment_data['id_Payment_History'],
-                'tenant_id': payment_data['ref_tenantID'],
+                'payment_id': pid,
+                'tenant_id': tid,
                 'due_date': due_date,
                 'payment_date': payment_date,
                 'status': status,
@@ -61,11 +66,14 @@ class PaymentAnalyzer:
         """
         try:
             # Get agreement details
-            agreement = self.agreement_access.get_agreement_by_id(payment_data['ref_AgreementId'])
+            agreement_id = payment_data.get('agreement_id')
+            if not agreement_id:
+                raise AnalysisError("Agreement ID required")
+            agreement = self.agreement_access.get_agreement_by_id(str(agreement_id))
             if not agreement:
                 raise AnalysisError("Agreement not found")
 
-            expected_amount = agreement['monthly_rent']
+            expected_amount = agreement['amount']
             actual_amount = payment_data['amount']
             
             # Determine status
@@ -76,9 +84,11 @@ class PaymentAnalyzer:
             else:
                 status = PaymentStatus.INCORRECT
 
+            pid = payment_data.get('id_payment_history')
+            tid = payment_data.get('tenant_id')
             return {
-                'payment_id': payment_data['id_Payment_History'],
-                'tenant_id': payment_data['ref_tenantID'],
+                'payment_id': pid,
+                'tenant_id': tid,
                 'expected_amount': expected_amount,
                 'actual_amount': actual_amount,
                 'status': status,
