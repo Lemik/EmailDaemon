@@ -32,8 +32,21 @@ def get_gmail_service():
 
     # Load saved credentials if available
     if os.path.exists(TOKEN_FILE):
-        with open(TOKEN_FILE, "rb") as token:
-            creds = pickle.load(token)
+        try:
+            with open(TOKEN_FILE, "rb") as token:
+                creds = pickle.load(token)
+        except (EOFError, pickle.UnpicklingError) as e:
+            logging.warning(
+                "Saved credentials at %s are missing, empty, or corrupt (%s). "
+                "Removing file; sign in again when prompted.",
+                TOKEN_FILE,
+                e,
+            )
+            try:
+                os.remove(TOKEN_FILE)
+            except OSError:
+                pass
+            creds = None
 
     # If credentials are missing or expired, refresh or request new login
     if not creds or not creds.valid:
